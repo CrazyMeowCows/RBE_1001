@@ -45,15 +45,7 @@ driveTrain.set_stopping(BrakeType.HOLD)
 arm_motor.set_stopping(BrakeType.HOLD)
 
 
-# Function Definitions
-def bumper_pressed():
-    driveTrain.drive(FORWARD, 100, PERCENT)
-    set_state(DRIVING)
-
-def move_arm_to_home():
-    arm_motor.spin_to_position(0*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
-    set_state(ARM_MOVING_DOWN)
-
+# Function Definitions 
 def sonar_detected(dist_thresh_mm):
     global acc
     dist_mm = sonar.distance(MM)
@@ -63,19 +55,15 @@ def sonar_detected(dist_thresh_mm):
         acc = max(acc-1, 0)
     return acc > 50
 
+def bumper_pressed():
+    driveTrain.drive(FORWARD, 100, PERCENT)
+    while (not sonar_detected(75)):
+        pass
+    driveTrain.stop()
+    arm_motor.spin_to_position(20*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, True)
+    sleep(5000)
+    arm_motor.spin_to_position(0*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
+
 
 # Button Bindings
 bumper.pressed(bumper_pressed)
-
-
-# State Machine
-while True:
-    if (state == DRIVING and sonar_detected(75)):
-        driveTrain.stop()
-        arm_motor.spin_to_position(20*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
-        set_state(ARM_MOVING_UP)
-    elif (state == ARM_MOVING_UP and arm_motor.is_done()):
-        timer.event(move_arm_to_home, 5000)
-        set_state(IDLE)
-    elif (state == ARM_MOVING_DOWN and arm_motor.is_done()):
-        set_state(IDLE)
