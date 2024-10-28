@@ -2,17 +2,16 @@
 from vex import *
 
 # Define Constants
-DRIVE_GEAR_RATIO = 5/1
-ARM_GEAR_RATIO = 5/1
+DRIVE_GEAR_RATIO = 1/5
+ARM_GEAR_RATIO = 1/5
 WHEEL_RAD_MM = 50.8
-TRACK_WIDTH_MM = 320
-WHEEL_BASE_MM = 270
+TRACK_WIDTH_MM = 285
+WHEEL_BASE_MM = 205
 
 # Variable Setup
 brain = Brain()
 controller = Controller()
 timer = Timer()
-acc = 0
 
 # State Machine Definitions
 IDLE = "idle"
@@ -23,8 +22,8 @@ state = IDLE
 
 def set_state(new_state):
     global state
-    brain.screen.print("Current State: " + state + " | New State: " + new_state)
     brain.screen.new_line()
+    brain.screen.print("Current State: " + state + " | New State: " + new_state)
     state = new_state
 
 # Motor and Sensor Definitions
@@ -48,11 +47,20 @@ arm_motor.set_stopping(BrakeType.HOLD)
 # Function Definitions
 def bumper_pressed():
     if (state == IDLE):
-        driveTrain.drive(FORWARD, 100, PERCENT)
+        # Use with gear ratio set to 1
+        # driveTrain.drive(FORWARD, 100, PERCENT)
+        # driveTrain.drive(FORWARD, 30*DRIVE_GEAR_RATIO, RPM)
+        # driveTrain.drive_for(FORWARD, 20*DRIVE_GEAR_RATIO, DistanceUnits.CM, 50, VelocityUnits.PERCENT, False)
+        
+        # Use with gear ratio set to 1/5
+        # driveTrain.drive(FORWARD, 100*DRIVE_GEAR_RATIO, PERCENT)
+        driveTrain.drive(FORWARD, 30, RPM)
+        # driveTrain.drive_for(FORWARD, 20, DistanceUnits.CM, 50*DRIVE_GEAR_RATIO, VelocityUnits.PERCENT, False)
+
         set_state(DRIVING)
 
 def move_arm_to_home():
-    arm_motor.spin_to_position(0*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
+    arm_motor.spin_to_position(0/ARM_GEAR_RATIO, DEGREES, 20, VelocityUnits.PERCENT, False)
     set_state(ARM_MOVING_DOWN)
 
 def sonar_detected(dist_thresh_mm):
@@ -60,21 +68,22 @@ def sonar_detected(dist_thresh_mm):
 
 
 # Button Bindings
-bumper.pressed(bumper_pressed)
+controller.buttonB.pressed(bumper_pressed)
 
 
 # State Machine
 while True:
     if (state == DRIVING and sonar_detected(75)):
         driveTrain.stop()
-        arm_motor.spin_to_position(45*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
+        arm_motor.spin_to_position(45/ARM_GEAR_RATIO, DEGREES, 50, VelocityUnits.PERCENT, False)
         set_state(ARM_MOVING_UP)
     elif (state == ARM_MOVING_UP and arm_motor.is_done()):
-        timer.event(move_arm_to_home, 5000)
+        timer.event(move_arm_to_home, 2000)
         set_state(IDLE)
     elif (state == ARM_MOVING_DOWN and arm_motor.is_done()):
         set_state(IDLE)
 
     brain.screen.clear_line()
-    brain.screen.print_at(sonar.distance(MM), x=20, y=100)
+    brain.screen.print_at("Sonar: " + str(sonar.distance(MM)), x=300, y=15)
+    brain.screen.print_at("Motor: " + str(arm_motor.command()), x=5, y=15)
     sleep(20)
