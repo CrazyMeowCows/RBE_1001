@@ -58,7 +58,7 @@ def sonar_detected(dist_thresh_mm):
 def bumper_pressed():
     driveTrain.drive(FORWARD, 100, PERCENT)
     while (not sonar_detected(75)):
-        pass
+        sleep(20)
     driveTrain.stop()
     arm_motor.spin_to_position(20*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, True)
     sleep(5000)
