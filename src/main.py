@@ -30,7 +30,7 @@ def set_state(new_state):
 # Motor and Sensor Definitions
 left_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
 right_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
-arm_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, False)
+arm_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True)
 sonar = Sonar(brain.three_wire_port.e)
 bumper = Bumper(brain.three_wire_port.d)
 
@@ -47,21 +47,16 @@ arm_motor.set_stopping(BrakeType.HOLD)
 
 # Function Definitions
 def bumper_pressed():
-    driveTrain.drive(FORWARD, 100, PERCENT)
-    set_state(DRIVING)
+    if (state == IDLE):
+        driveTrain.drive(FORWARD, 100, PERCENT)
+        set_state(DRIVING)
 
 def move_arm_to_home():
     arm_motor.spin_to_position(0*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
     set_state(ARM_MOVING_DOWN)
 
 def sonar_detected(dist_thresh_mm):
-    global acc
-    dist_mm = sonar.distance(MM)
-    if (dist_mm <= dist_thresh_mm and dist_mm > 0):
-        acc = acc+1
-    else:
-        acc = max(acc-1, 0)
-    return acc > 50
+    return sonar.distance(MM) <= dist_thresh_mm
 
 
 # Button Bindings
@@ -72,10 +67,14 @@ bumper.pressed(bumper_pressed)
 while True:
     if (state == DRIVING and sonar_detected(75)):
         driveTrain.stop()
-        arm_motor.spin_to_position(20*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
+        arm_motor.spin_to_position(45*ARM_GEAR_RATIO, DEGREES, 100, VelocityUnits.PERCENT, False)
         set_state(ARM_MOVING_UP)
     elif (state == ARM_MOVING_UP and arm_motor.is_done()):
         timer.event(move_arm_to_home, 5000)
         set_state(IDLE)
     elif (state == ARM_MOVING_DOWN and arm_motor.is_done()):
         set_state(IDLE)
+
+    brain.screen.clear_line()
+    brain.screen.print_at(sonar.distance(MM), x=20, y=100)
+    sleep(20)
