@@ -62,12 +62,15 @@ while gyro.is_calibrating():
 
 # Function Definitions ----------------------------------------------
 def start_routine():
-    global count
     set_state(LINE_FOLLOWING)
-    count = 0
 
 def scale(val, min, max):
     return (val-min)/(max-min)
+
+def continuous_error_deg(target, current):
+    target = target/360
+    current = current/360
+    return abs((target - current) - math.floor(target - current + 0.5))*360
 
 
 # Button Bindings ---------------------------------------------------
@@ -91,17 +94,18 @@ while True:
             count += 1
             print("New Count: " + str(count))
     elif (state == TURNING):
-        driveTrain.turn(LEFT, 20, RPM)
         current = gyro.heading()/360
 
-        if (count == 1):
+        if (count % 2 != 0):
             target = 0.5
-        elif (count == 2):
-            target = 0
+            driveTrain.turn(RIGHT, 20, RPM)
+        elif (count % 2 == 0):
+            target = 3/360
+            driveTrain.turn(LEFT, 20, RPM)
 
-        if (abs((target - current) - math.floor(target - current + 0.5)) < 0.5/360):
+        if (abs((target - current) - math.floor(target - current + 0.5)) < 3/360):
             driveTrain.stop()
-            if (count == 1):
+            if (count % 2 != 0):
                 set_state(LINE_FOLLOWING)
             else:
                 set_state(IDLE)
