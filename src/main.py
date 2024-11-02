@@ -11,8 +11,8 @@ WHEEL_BASE_MM = 205
 
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
-LINE_FOLLOWING_GAIN = 0.8
-LINE_FOLLOWING_RPM = 600
+GYRO_GAIN = 50
+GYRO_RPM = 300
 
 
 # Variable Setup ----------------------------------------------------
@@ -81,12 +81,15 @@ controller.buttonB.pressed(start_routine)
 while True:
     sleep(20)
     if (state == LINE_FOLLOWING):
-        errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * LINE_FOLLOWING_RPM
+        if (count % 2 == 0):
+            target = 0
+        elif (count % 2 != 0):
+            target = 0.5
+        current = gyro.heading()/360
+        error = ((target - current) - math.floor(target - current + 0.5))*360*GYRO_GAIN
 
-        left_motor.spin(FORWARD, LINE_FOLLOWING_RPM - sum_error, RPM)
-        right_motor.spin(FORWARD, LINE_FOLLOWING_RPM + sum_error, RPM)
+        left_motor.spin(FORWARD, GYRO_RPM - error, RPM)
+        right_motor.spin(FORWARD, GYRO_RPM + error, RPM)
 
         if (sonar.distance(MM) < 200):
             driveTrain.stop()
