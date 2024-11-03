@@ -70,8 +70,8 @@ def line_follow_to_wall(dist_to_wall_mm, speed_percent):
         errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
         sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * speed_percent
 
-        left_motor.spin(FORWARD, speed_percent - sum_error, PERCENT)
-        right_motor.spin(FORWARD, speed_percent + sum_error, PERCENT)
+        left_motor.spin(FORWARD, speed_percent + sum_error, PERCENT)
+        right_motor.spin(FORWARD, speed_percent - sum_error, PERCENT)
         sleep(20)
 
     driveTrain.stop()
