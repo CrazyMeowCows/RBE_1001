@@ -12,7 +12,7 @@ WHEEL_BASE_MM = 205
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
 LINE_FOLLOWING_GAIN = 0.8
-LINE_FOLLOWING_RPM = 600
+GYRO_GAIN = 50
 
 
 # Variable Setup ----------------------------------------------------
@@ -75,6 +75,18 @@ def line_follow_to_wall(dist_to_wall_mm, speed_percent):
         sleep(20)
 
     driveTrain.stop()
+
+
+def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
+    target = target_rot_deg/360
+
+    while (sonar.distance(MM) > dist_to_wall_mm):
+        current = gyro.heading()/360
+        error = ((target - current) - math.floor(target - current + 0.5))*360*GYRO_GAIN
+
+        left_motor.spin(FORWARD, speed_percent - error, PERCENT)
+        right_motor.spin(FORWARD, speed_percent + error, PERCENT)
+
 
 def gyro_turn(target_rot_deg, dir, speed_percent):
     target = target_rot_deg/360
