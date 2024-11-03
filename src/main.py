@@ -11,32 +11,32 @@ WHEEL_BASE_MM = 205
 
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
-LINE_FOLLOWING_GAIN = 0.8
-GYRO_GAIN = 50
+LINE_FOLLOWING_GAIN = 0.6
+GYRO_GAIN = 0.165
 
 
 # Variable Setup ----------------------------------------------------
 brain = Brain()
 controller = Controller()
-timer = Timer()
+# timer = Timer()
 
 
 # State Machine Definitions -----------------------------------------
-IDLE = "IDLE"
-LINE_FOLLOWING = "LINE_FOLLOWING"
-TURNING = "TURNING"
-state = IDLE
-count = 0
+# IDLE = "IDLE"
+# LINE_FOLLOWING = "LINE_FOLLOWING"
+# TURNING = "TURNING"
+# state = IDLE
+# count = 0
 
-def set_state(new_state):
-    global state
-    print("Current State: " + state + " | New State: " + new_state)
-    state = new_state
+# def set_state(new_state):
+#     global state
+#     print("Current State: " + state + " | New State: " + new_state)
+#     state = new_state
 
 
 # Motor and Sensor Definitions --------------------------------------
-left_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-right_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+left_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+right_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 arm_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True)
 gyro = Inertial(Ports.PORT20)
 
@@ -51,13 +51,13 @@ right_motor.reset_position()
 arm_motor.reset_position()
 
 driveTrain = DriveTrain(left_motor, right_motor, 2*math.pi*WHEEL_RAD_MM, TRACK_WIDTH_MM, WHEEL_BASE_MM, MM, DRIVE_GEAR_RATIO)
+# Use with gear ratio set to 1/5
+# driveTrain.drive(FORWARD, 100*DRIVE_GEAR_RATIO, PERCENT)
+# driveTrain.drive(FORWARD, 30, RPM)
+# driveTrain.drive_for(FORWARD, 20, DistanceUnits.CM, 50*DRIVE_GEAR_RATIO, VelocityUnits.PERCENT, False)
 
 driveTrain.set_stopping(BrakeType.HOLD)
 arm_motor.set_stopping(BrakeType.HOLD)
-
-gyro.calibrate()
-while gyro.is_calibrating():
-    sleep(50)
 
 
 # Function Definitions ----------------------------------------------
@@ -79,18 +79,23 @@ def line_follow_to_wall(dist_to_wall_mm, speed_percent):
 
 def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
     target = target_rot_deg/360
+    current = gyro.heading()/360
 
     while (sonar.distance(MM) > dist_to_wall_mm):
         current = gyro.heading()/360
-        error = ((target - current) - math.floor(target - current + 0.5))*360*GYRO_GAIN
+        error = ((target - current) - math.floor(target - current + 0.5))*360*GYRO_GAIN*speed_percent
 
-        left_motor.spin(FORWARD, speed_percent - error, PERCENT)
-        right_motor.spin(FORWARD, speed_percent + error, PERCENT)
+        left_motor.spin(FORWARD, speed_percent + error, PERCENT)
+        right_motor.spin(FORWARD, speed_percent - error, PERCENT)
+        sleep(20)
+
+    driveTrain.stop()
 
 
 def gyro_turn(target_rot_deg, dir, speed_percent):
     target = target_rot_deg/360
-    driveTrain.turn(dir, speed_percent, PERCENT)
+    driveTrain.turn(dir, speed_percent*DRIVE_GEAR_RATIO, PERCENT)
+    current = gyro.heading()/360
 
     while (abs((target - current) - math.floor(target - current + 0.5)) > 1/360):
         current = gyro.heading()/360
@@ -101,8 +106,13 @@ def gyro_turn(target_rot_deg, dir, speed_percent):
 
 # Button Bindings ---------------------------------------------------
 def start_routine():
-    line_follow_to_wall(200, 50)
+    gyro.calibrate()
+    while gyro.is_calibrating():
+        sleep(50)
+    
+    gyro_drive_to_wall(0, 200, 100)
     gyro_turn(180, LEFT, 50)
-    line_follow_to_wall(200, 50)
-    gyro_turn(180, RIGHT, 50)
+    gyro_drive_to_wall(180, 200, 100)
+    gyro_turn(0, RIGHT, 50)
+    print(gyro.heading())
 controller.buttonB.pressed(start_routine)
