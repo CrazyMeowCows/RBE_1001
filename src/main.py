@@ -61,53 +61,36 @@ while gyro.is_calibrating():
 
 
 # Function Definitions ----------------------------------------------
-def start_routine():
-    set_state(LINE_FOLLOWING)
-
 def scale(val, min, max):
     return (val-min)/(max-min)
 
-def continuous_error_deg(target, current):
-    target = target/360
-    current = current/360
-    return abs((target - current) - math.floor(target - current + 0.5))*360
+def line_follow_to_wall(dist_to_wall_mm, speed_percent):
+    while (sonar.distance(MM) > dist_to_wall_mm):
+        errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
+        errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
+        sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * speed_percent
+
+        left_motor.spin(FORWARD, speed_percent - sum_error, PERCENT)
+        right_motor.spin(FORWARD, speed_percent + sum_error, PERCENT)
+        sleep(20)
+
+    driveTrain.stop()
+
+def gyro_turn(target_rot_deg, dir, speed_percent):
+    target = target_rot_deg/360
+    driveTrain.turn(dir, speed_percent, PERCENT)
+
+    while (abs((target - current) - math.floor(target - current + 0.5)) > 1/360):
+        current = gyro.heading()/360
+        sleep(20)
+
+    driveTrain.stop()
 
 
 # Button Bindings ---------------------------------------------------
+def start_routine():
+    line_follow_to_wall(200, 50)
+    gyro_turn(180, LEFT, 50)
+    line_follow_to_wall(200, 50)
+    gyro_turn(180, RIGHT, 50)
 controller.buttonB.pressed(start_routine)
-
-
-# Main Loop ---------------------------------------------------------
-while True:
-    sleep(20)
-    if (state == LINE_FOLLOWING):
-        errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * LINE_FOLLOWING_RPM
-
-        left_motor.spin(FORWARD, LINE_FOLLOWING_RPM - sum_error, RPM)
-        right_motor.spin(FORWARD, LINE_FOLLOWING_RPM + sum_error, RPM)
-
-        if (sonar.distance(MM) < 200):
-            driveTrain.stop()
-            set_state(TURNING)
-            count += 1
-            print("New Count: " + str(count))
-    elif (state == TURNING):
-        current = gyro.heading()/360
-
-        if (count % 2 != 0):
-            target = 0.5
-            driveTrain.turn(RIGHT, 20, RPM)
-        elif (count % 2 == 0):
-            target = 3/360
-            driveTrain.turn(LEFT, 20, RPM)
-
-        if (abs((target - current) - math.floor(target - current + 0.5)) < 3/360):
-            driveTrain.stop()
-            if (count % 2 != 0):
-                set_state(LINE_FOLLOWING)
-            else:
-                set_state(IDLE)
-                print("Heading: " + str(gyro.heading()))
-    
