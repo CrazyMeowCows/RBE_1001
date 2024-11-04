@@ -61,9 +61,11 @@ arm_motor.set_stopping(BrakeType.HOLD)
 
 
 # Function Definitions ----------------------------------------------
+# Scale a value from a min->max to 0->1
 def scale(val, min, max):
     return (val-min)/(max-min)
 
+# Line follow at a given speed until the ultrasonic detects something
 def line_follow_to_wall(dist_to_wall_mm, speed_percent):
     while (sonar.distance(MM) > dist_to_wall_mm):
         errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
@@ -76,7 +78,7 @@ def line_follow_to_wall(dist_to_wall_mm, speed_percent):
 
     driveTrain.stop()
 
-
+# Drive forward while maintaing the given target rotation
 def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
     target = target_rot_deg/360
     current = gyro.heading()/360
@@ -91,7 +93,7 @@ def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
 
     driveTrain.stop()
 
-
+# Turn to a given gyro heading
 def gyro_turn(target_rot_deg, dir, speed_percent):
     target = target_rot_deg/360
     driveTrain.turn(dir, speed_percent*DRIVE_GEAR_RATIO, PERCENT)
@@ -102,6 +104,9 @@ def gyro_turn(target_rot_deg, dir, speed_percent):
         sleep(20)
 
     driveTrain.stop()
+
+# Originally configured with a state machine, but reconfigured to use blocking sequential code as it 
+# significantly increased readablilty and reliability for this use case
 
 
 # Button Bindings ---------------------------------------------------
@@ -114,5 +119,5 @@ def start_routine():
     gyro_turn(180, LEFT, 50)
     gyro_drive_to_wall(180, 200, 100)
     gyro_turn(0, RIGHT, 50)
-    print(gyro.heading())
+
 controller.buttonB.pressed(start_routine)
