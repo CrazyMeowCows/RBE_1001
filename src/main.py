@@ -65,6 +65,11 @@ arm_motor.set_stopping(BrakeType.HOLD)
 def scale(val, min, max):
     return (val-min)/(max-min)
 
+# Get continous angle error from discontinuous angles
+def angle_error_deg(target, current):
+    diff = math.radians(target) - math.radians(current)
+    return math.degrees(math.atan2(math.sin(diff), math.cos(diff)))
+
 # Line follow at a given speed until the ultrasonic detects something
 def line_follow_to_wall(dist_to_wall_mm, speed_percent):
     while (sonar.distance(MM) > dist_to_wall_mm):
@@ -80,12 +85,11 @@ def line_follow_to_wall(dist_to_wall_mm, speed_percent):
 
 # Drive forward while maintaing the given target rotation
 def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
-    target = target_rot_deg/360
-    current = gyro.heading()/360
+    current = gyro.heading()
 
     while (sonar.distance(MM) > dist_to_wall_mm):
-        current = gyro.heading()/360
-        error = ((target - current) - math.floor(target - current + 0.5))*360*GYRO_GAIN*speed_percent
+        current = gyro.heading()
+        error = angle_error_deg(target_rot_deg, current)*GYRO_GAIN*speed_percent
 
         left_motor.spin(FORWARD, speed_percent + error, PERCENT)
         right_motor.spin(FORWARD, speed_percent - error, PERCENT)
@@ -95,12 +99,12 @@ def gyro_drive_to_wall(target_rot_deg, dist_to_wall_mm, speed_percent):
 
 # Turn to a given gyro heading
 def gyro_turn(target_rot_deg, dir, speed_percent):
-    target = target_rot_deg/360
+    target = target_rot_deg
     driveTrain.turn(dir, speed_percent*DRIVE_GEAR_RATIO, PERCENT)
-    current = gyro.heading()/360
+    current = gyro.heading()
 
-    while (abs((target - current) - math.floor(target - current + 0.5)) > 1/360):
-        current = gyro.heading()/360
+    while (abs(angle_error_deg(target, current)) > 1):
+        current = gyro.heading()
         sleep(20)
 
     driveTrain.stop()
