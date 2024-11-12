@@ -109,9 +109,6 @@ def gyro_turn(target_rot_deg, dir, speed_percent):
 
     driveTrain.stop()
 
-# Originally configured with a state machine, but reconfigured to use blocking sequential code as it 
-# significantly increased readablilty and reliability for this use case
-
 
 # Button Bindings ---------------------------------------------------
 def start_routine():
