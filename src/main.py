@@ -34,10 +34,11 @@ right_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 center_motor = Motor(Ports.PORT4, GearSetting.RATIO_18_1, False)
 effector_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True)
 
-Vision3__LEMON = Signature (3, 3267, 3959, 3613, -3503, -3121, -3312, 2.500, 0)
-Vision3__LIME = Signature (2, -5553, -4205, -4879, -3549, -1999, -2774, 2.500, 0)
-Vision3__ORANGE = Signature (1, 6345, 8529, 7437, -2349, -2033, -2191, 2.500, 0)
-Vision3 = Vision (Ports.PORT3, 72, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
+Vision3__LEMON = Signature (3, 1335, 1737, 1536, -3855, -3589, -3722, 2.6, 0)
+Vision3__LIME = Signature (2, -6813, -5985, -6400, -3439, -2829, -3134, 3.4, 0)
+Vision3__ORANGE = Signature (1, 5939, 6607, 6273, -2463, -2145, -2304, 1.7, 0)
+Vision3 = Vision (Ports.PORT3, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
+
 
 # Motor and Sensor Setup --------------------------------------------
 left_motor.reset_position()
