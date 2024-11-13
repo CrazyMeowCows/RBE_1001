@@ -9,7 +9,6 @@ WHEEL_RAD_MM = 50.8
 TRACK_WIDTH_MM = 285
 WHEEL_BASE_MM = 205
 
-
 # Variable Setup ----------------------------------------------------
 brain = Brain()
 controller = Controller()
@@ -32,9 +31,13 @@ controller = Controller()
 # Motor and Sensor Definitions --------------------------------------
 left_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 right_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-center_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False) #TODO: SET PORTS
-effector_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True) #TODO: SET PORTS
+center_motor = Motor(Ports.PORT4, GearSetting.RATIO_18_1, False)
+effector_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True)
 
+Vision3__LEMON = Signature (3, 3267, 3959, 3613, -3503, -3121, -3312, 2.500, 0)
+Vision3__LIME = Signature (2, -5553, -4205, -4879, -3549, -1999, -2774, 2.500, 0)
+Vision3__ORANGE = Signature (1, 6345, 8529, 7437, -2349, -2033, -2191, 2.500, 0)
+Vision3 = Vision (Ports.PORT3, 72, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
 
 # Motor and Sensor Setup --------------------------------------------
 left_motor.reset_position()
@@ -54,7 +57,15 @@ effector_motor.set_stopping(BrakeType.HOLD)
 
 
 # Function Definitions ----------------------------------------------
+def find_fruit():
+    lime_objects = Vision3.take_snapshot(Vision3__LIME)
+    lemon_objects = Vision3.take_snapshot(Vision3__LEMON)
+    if lime_objects:
+        print("Lime Detected")
+    if lemon_objects:
+        print("Lemon Detected")
 
+controller.buttonB.pressed(find_fruit)
 
 # Main Loop  --------------------------------------------------------
 while True:
@@ -73,4 +84,5 @@ while True:
         rButton += -100
 
     effector_motor.spin(FORWARD, rButton, PERCENT)
+    sleep(20)
     
