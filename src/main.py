@@ -1,6 +1,6 @@
 # Library Imports ---------------------------------------------------
 from vex import *
-import math
+# import math
 
 
 # Define Constants --------------------------------------------------
@@ -9,6 +9,7 @@ ARM_GEAR_RATIO = 1/5
 WHEEL_RAD_MM = 50.8
 TRACK_WIDTH_MM = 285
 WHEEL_BASE_MM = 205
+MINIMUM_HEIGHT_PX = 40
 
 
 # Variable Setup ----------------------------------------------------
@@ -56,14 +57,12 @@ effector_motor.set_stopping(BrakeType.HOLD)
 
 # Function Definitions ----------------------------------------------
 def find_fruit():
-    lime_objects = Vision3.take_snapshot(Vision3__LIME)
-    lemon_objects = Vision3.take_snapshot(Vision3__LEMON)
-    if lime_objects:
-        print("Lime Detected")
-    if lemon_objects:
-        print("Lemon Detected")
+    largest_object = Vision3.largest_object()
+    if largest_object.exists and largest_object.height > MINIMUM_HEIGHT_PX:
+        return largest_object    
+    return None
 
-controller.buttonB.pressed(find_fruit)
+# controller.buttonB.pressed(find_fruit)
 
 
 # Main Loop  --------------------------------------------------------
@@ -71,12 +70,16 @@ while True:
     forward = controller.axis3.position()
     sideways = controller.axis4.position()
     rotation = controller.axis1.position()
-    rButton = controller.buttonR1.pressing()*100 - controller.buttonR2.pressing()*100
+    rButton = (controller.buttonR1.pressing()-controller.buttonR2.pressing())*100
 
     left_motor.spin(FORWARD, forward + rotation, PERCENT)
     right_motor.spin(FORWARD, forward - rotation, PERCENT)
     center_motor.spin(FORWARD, sideways * DRIVE_GEAR_RATIO, PERCENT)
     effector_motor.spin(FORWARD, rButton, PERCENT)
+
+    fruit = find_fruit()
+    if fruit:
+        print("X: " + str(fruit.centerX) + " | Y: " +  str(fruit.centerY) + "| Type: " + str(fruit.id))
 
     sleep(20)
     
