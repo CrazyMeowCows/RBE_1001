@@ -61,7 +61,7 @@ effector_motor.set_stopping(BrakeType.HOLD)
 def append_objects(list, tuple, type):
     if tuple:
         for x in tuple:
-            if x.width > 20 and x.height > 20:
+            if x.width > 10 and x.height > 20:
                 list.append((x, type))
                 print(type)
     return list
@@ -82,13 +82,13 @@ def get_biggest_fruit():
 
 def find_fruit():
     acc = 20
-    while acc > 0:
+    while acc > 0 and not controller.buttonY.pressing():
         fruit_object = get_biggest_fruit()
-        
+
         if fruit_object:
             fruit = fruit_object[0]
             x_error = (fruit.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
-            y_error = (fruit.centerY - RESOLUTION_HEIGHT/2)*GAIN_Y #down is +
+            y_error = (fruit.centerY - RESOLUTION_HEIGHT/2 - 10)*GAIN_Y #down is +
 
             left_motor.spin(REVERSE, 20 - x_error, PERCENT)
             right_motor.spin(REVERSE, 20 + x_error, PERCENT)
@@ -101,6 +101,10 @@ def find_fruit():
             acc = max(acc-1, 0)
 
         sleep(20)
+
+    left_motor.stop()
+    right_motor.stop()
+    effector_motor.stop()
 
 controller.buttonB.pressed(find_fruit)
 
