@@ -9,8 +9,10 @@ ARM_GEAR_RATIO = 1/5
 WHEEL_RAD_MM = 50.8
 TRACK_WIDTH_MM = 285
 WHEEL_BASE_MM = 205
-MINIMUM_HEIGHT_PX = 40
-
+RESOLUTION_WIDTH = 316
+RESOLUTION_HEIGHT = 210
+GAIN_X = 1
+GAIN_Y = 1
 
 # Variable Setup ----------------------------------------------------
 brain = Brain()
@@ -57,12 +59,26 @@ effector_motor.set_stopping(BrakeType.HOLD)
 
 # Function Definitions ----------------------------------------------
 def find_fruit():
-    largest_object = Vision3.largest_object()
-    if largest_object.exists and largest_object.height > MINIMUM_HEIGHT_PX:
-        return largest_object    
-    return None
+    acc = 20
 
-# controller.buttonB.pressed(find_fruit)
+    while acc > 0:
+        largest_object = Vision3.largest_object()
+        if largest_object.exists:
+            acc = 20
+        else:
+            acc = max(acc-1, 0)
+
+        x_error = (largest_object.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
+        y_error = (largest_object.centerY - RESOLUTION_HEIGHT/2)*GAIN_Y #down is +
+
+        left_motor.spin(FORWARD, 20 + x_error, PERCENT)
+        right_motor.spin(FORWARD, 20 - x_error, PERCENT)
+        effector_motor.spin(REVERSE, y_error, PERCENT)
+
+        sleep(20)
+
+
+controller.buttonB.pressed(find_fruit)
 
 
 # Main Loop  --------------------------------------------------------
@@ -76,10 +92,6 @@ while True:
     right_motor.spin(FORWARD, forward - rotation, PERCENT)
     center_motor.spin(FORWARD, sideways * DRIVE_GEAR_RATIO, PERCENT)
     effector_motor.spin(FORWARD, rButton, PERCENT)
-
-    fruit = find_fruit()
-    if fruit:
-        print("X: " + str(fruit.centerX) + " | Y: " +  str(fruit.centerY) + "| Type: " + str(fruit.id))
 
     sleep(20)
     
