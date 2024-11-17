@@ -58,21 +58,44 @@ effector_motor.set_stopping(BrakeType.HOLD)
 
 
 # Function Definitions ----------------------------------------------
+def append_objects(list, tuple, type):
+    if tuple:
+        for x in tuple:
+            if x.width > 20 and x.height > 20:
+                list.append((x, type))
+                print(type)
+    return list
+
+def get_biggest_fruit():
+    fruit = []
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__LIME), "lime")
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__LEMON), "lemon")
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__ORANGE), "orange")
+
+    biggest = None
+    if len(fruit) > 0:
+        biggest = fruit[0]
+        for x in fruit:
+            if x[0].height > biggest[0].height:
+                biggest = x
+    return biggest
+
 def find_fruit():
     acc = 20
-
     while acc > 0:
+        fruit_object = get_biggest_fruit()
         
-        if Vision3.take_snapshot(Vision3__LIME) or Vision3.take_snapshot(Vision3__LEMON) or Vision3.take_snapshot(Vision3__ORANGE):
-            largest_object = Vision3.largest_object()
-            acc = 20
-            x_error = (largest_object.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
-            y_error = (largest_object.centerY - RESOLUTION_HEIGHT/2)*GAIN_Y #down is +
+        if fruit_object:
+            fruit = fruit_object[0]
+            x_error = (fruit.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
+            y_error = (fruit.centerY - RESOLUTION_HEIGHT/2)*GAIN_Y #down is +
 
             left_motor.spin(REVERSE, 20 - x_error, PERCENT)
             right_motor.spin(REVERSE, 20 + x_error, PERCENT)
             effector_motor.spin(REVERSE, y_error, PERCENT)
-            print(y_error)
+
+            print("Targeting: " + fruit_object[1])
+            acc = 20
         else:
             print("No Fruit Found")
             acc = max(acc-1, 0)
