@@ -16,7 +16,7 @@ GAIN_Y = 1
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
 LINE_FOLLOWING_GAIN = 0.6
-GYRO_GAIN = 0.165
+GYRO_GAIN = 0.05
 
 # Variable Setup ----------------------------------------------------
 brain = Brain()
@@ -28,7 +28,7 @@ left_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 right_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 center_motor = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 elbow_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, True)
-effector_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+effector_motor = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 
 gyro = Inertial(Ports.PORT11)
 
@@ -38,7 +38,7 @@ right_line = Line(brain.three_wire_port.b)
 Vision3__LEMON = Signature(3, 1335, 1737, 1536, -3855, -3589, -3722, 2.6, 0)
 Vision3__LIME = Signature(2, -6813, -5985, -6400, -3439, -2829, -3134, 3.4, 0)
 Vision3__ORANGE = Signature(1, 5939, 6607, 6273, -2463, -2145, -2304, 1.7, 0)
-Vision3 = Vision(Ports.PORT3, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE) #TODO: SET PORT
+Vision3 = Vision(Ports.PORT20, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
 
 
 # Motor and Sensor Setup --------------------------------------------
@@ -136,7 +136,7 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     left_motor.reset_position()
     right_motor.reset_position()
 
-    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_MM < dist_to_travel_cm*10):
+    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_MM < dist_to_travel_cm*100):
         errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
         errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
         sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * speed_percent
@@ -149,17 +149,36 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     right_motor.stop()
 
 # Raise the arm to a tree height and start intaking
-def set_arm(tree_level): #TODO: add case statement
-    elbow_motor.spin_to_position(45, DEGREES, 100, RPM, True)
-    effector_motor.spin(FORWARD, 100, PERCENT)
+def set_arm(tree_level, intake): #TODO: add case statement
+    elbow_motor.spin_to_position(tree_level, DEGREES, 100, RPM, True)
+    effector_motor.spin(FORWARD, intake, PERCENT)
+
+def drive_forward(distance_cm, speed_percent):
+    left_motor.reset_position()
+    right_motor.reset_position()
+    left_motor.spin(FORWARD, speed_percent, PERCENT)
+    right_motor.spin(FORWARD, speed_percent, PERCENT)
+
+    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_MM < distance_cm*100):
+        sleep(20)
+
+    left_motor.stop()
+    right_motor.stop()
 
 
 # The routine to be executed when button is pressed -----------------
 def auton_routine():
-    line_follow_dist_cm(100, 50)
-    gyro_turn(90)
-    set_arm(3)
-    find_fruit()
+    gyro.calibrate()
+    while (gyro.is_calibrating()):
+        sleep(50)
+
+    set_arm(20*5, 0)
+    line_follow_dist_cm(27.5, 50)
+    gyro_turn(90, 50)
+    set_arm(40*5, 100)
+    drive_forward(10, 40)
+    set_arm(40*5, 0)
+    # find_fruit()
 
 controller.buttonB.pressed(auton_routine)
     
