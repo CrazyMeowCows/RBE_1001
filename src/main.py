@@ -6,7 +6,7 @@ import math
 # Define Constants --------------------------------------------------
 DRIVE_GEAR_RATIO = 1/5
 ARM_GEAR_RATIO = 1/5
-WHEEL_RAD_MM = 50.8
+WHEEL_RAD_CM = 5.08
 TRACK_WIDTH_MM = 285
 WHEEL_BASE_MM = 205
 RESOLUTION_WIDTH = 316
@@ -136,7 +136,7 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     left_motor.reset_position()
     right_motor.reset_position()
 
-    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_MM < dist_to_travel_cm*100):
+    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_CM/DRIVE_GEAR_RATIO < dist_to_travel_cm):
         errorL = scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
         errorR = -scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
         sum_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * speed_percent
@@ -148,10 +148,17 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     left_motor.stop()
     right_motor.stop()
 
+ARM_LEVELS = { #TODO: Tune These
+  "travel": 20,
+  "tree_0": 15,
+  "tree_1": 25,
+  "tree_2": 40,
+  "tree_3": 45
+}
 # Raise the arm to a tree height and start intaking
-def set_arm(tree_level, intake): #TODO: add case statement
-    elbow_motor.spin_to_position(tree_level, DEGREES, 100, RPM, True)
-    effector_motor.spin(FORWARD, intake, PERCENT)
+def set_arm(arm_level, intake_speed): #TODO: add case statement
+    elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 100, RPM, True)
+    effector_motor.spin(FORWARD, intake_speed, PERCENT)
 
 def drive_forward(distance_cm, speed_percent):
     left_motor.reset_position()
@@ -159,7 +166,7 @@ def drive_forward(distance_cm, speed_percent):
     left_motor.spin(FORWARD, speed_percent, PERCENT)
     right_motor.spin(FORWARD, speed_percent, PERCENT)
 
-    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_MM < distance_cm*100):
+    while ((left_motor.position(RotationUnits.REV)+right_motor.position(RotationUnits.REV))*math.pi*WHEEL_RAD_CM/DRIVE_GEAR_RATIO < distance_cm):
         sleep(20)
 
     left_motor.stop()
@@ -172,12 +179,12 @@ def auton_routine():
     while (gyro.is_calibrating()):
         sleep(50)
 
-    set_arm(20*5, 0)
+    set_arm("travel", 0)
     line_follow_dist_cm(27.5, 50)
     gyro_turn(90, 50)
-    set_arm(40*5, 100)
+    set_arm("TREE_2", 100)
     drive_forward(10, 40)
-    set_arm(40*5, 0)
+    set_arm("TREE_2", 0)
     # find_fruit()
 
 controller.buttonB.pressed(auton_routine)
