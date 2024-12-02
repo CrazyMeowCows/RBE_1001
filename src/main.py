@@ -18,6 +18,7 @@ MAX_REFLECTIVITY = 2645
 LINE_FOLLOWING_GAIN = 0.6
 GYRO_GAIN = 0.05
 
+
 # Variable Setup ----------------------------------------------------
 brain = Brain()
 controller = Controller()
@@ -42,20 +43,13 @@ Vision3 = Vision(Ports.PORT20, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANG
 
 
 # Motor and Sensor Setup --------------------------------------------
-left_motor.reset_position()
-right_motor.reset_position()
-center_motor.reset_position()
-elbow_motor.reset_position()
-effector_motor.reset_position()
-
 left_motor.set_stopping(BrakeType.HOLD)
 right_motor.set_stopping(BrakeType.HOLD)
 center_motor.set_stopping(BrakeType.HOLD)
-elbow_motor.set_stopping(BrakeType.HOLD)
 effector_motor.set_stopping(BrakeType.HOLD)
 
 
-# Function Definitions ----------------------------------------------
+# Helper Functions -----------------------------------------------------------------
 #Append a tuple of vision objects to the given list and return it
 def append_objects(list, tuple, type):
     if tuple:
@@ -80,6 +74,17 @@ def get_biggest_fruit():
                 biggest = x
     return biggest
 
+# Scale a value from a min->max to 0->1
+def scale(val, min, max):
+    return (val-min)/(max-min)
+
+# Get continous angle error from discontinuous angles
+def angle_error_deg(target, current):
+    diff = math.radians(target) - math.radians(current)
+    return math.degrees(math.atan2(math.sin(diff), math.cos(diff)))
+
+
+# Function Definitions -------------------------------------------------------------
 #Drive towards the biggest fruit the robot can currently see
 def find_fruit():
     acc = 20
@@ -107,15 +112,6 @@ def find_fruit():
     right_motor.stop()
     effector_motor.stop()
 
-# Scale a value from a min->max to 0->1
-def scale(val, min, max):
-    return (val-min)/(max-min)
-
-# Get continous angle error from discontinuous angles
-def angle_error_deg(target, current):
-    diff = math.radians(target) - math.radians(current)
-    return math.degrees(math.atan2(math.sin(diff), math.cos(diff)))
-
 # Turn with unspecified direction to target heading in degrees
 def gyro_turn(target_rot_deg, speed_percent):
     current = gyro.heading()
@@ -131,7 +127,7 @@ def gyro_turn(target_rot_deg, speed_percent):
     left_motor.stop()
     right_motor.stop()
 
-# Line follow at a given speed until the ultrasonic detects something
+# Line follow at a given speed for a given distance based off drivetrain encoders
 def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     left_motor.reset_position()
     right_motor.reset_position()
@@ -148,6 +144,7 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     left_motor.stop()
     right_motor.stop()
 
+# Raise the arm to a tree height and start intaking
 ARM_LEVELS = { #TODO: Tune These
   "travel": 20,
   "tree_0": 15,
@@ -155,11 +152,11 @@ ARM_LEVELS = { #TODO: Tune These
   "tree_2": 40,
   "tree_3": 45
 }
-# Raise the arm to a tree height and start intaking
-def set_arm(arm_level, intake_speed): #TODO: add case statement
+def set_arm(arm_level, intake_speed):
     elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 100, RPM, True)
     effector_motor.spin(FORWARD, intake_speed, PERCENT)
 
+# Drive forward a set distance based purely off drivetrain encoders
 def drive_forward(distance_cm, speed_percent):
     left_motor.reset_position()
     right_motor.reset_position()
@@ -172,13 +169,31 @@ def drive_forward(distance_cm, speed_percent):
     left_motor.stop()
     right_motor.stop()
 
-
-# The routine to be executed when button is pressed -----------------
-def auton_routine():
+# Calibrate gyro and eliminate backlash
+def calibrate_robot():
+    elbow_motor.set_stopping(BrakeType.COAST)
     gyro.calibrate()
     while (gyro.is_calibrating()):
         sleep(50)
+    left_motor.spin(REVERSE, 20, PERCENT)
+    right_motor.spin(REVERSE, 20, PERCENT)
 
+    sleep(0.5)
+
+    left_motor.reset_position()
+    right_motor.reset_position()
+    center_motor.reset_position()
+    elbow_motor.reset_position()
+    effector_motor.reset_position()
+
+    left_motor.stop()
+    right_motor.stop()
+    elbow_motor.set_stopping(BrakeType.HOLD)
+
+
+# The routine to be executed when button is pressed --------------------------------
+def auton_routine():
+    calibrate_robot()
     set_arm("travel", 0)
     line_follow_dist_cm(27.5, 50)
     gyro_turn(90, 50)
