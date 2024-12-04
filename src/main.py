@@ -66,13 +66,29 @@ def get_biggest_fruit():
     fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__LEMON), "lemon")
     fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__ORANGE), "orange")
 
-    biggest = None
+    result = None
     if len(fruit) > 0:
-        biggest = fruit[0]
+        result = fruit[0]
         for x in fruit:
-            if x[0].height > biggest[0].height:
-                biggest = x
-    return biggest
+            if x[0].height > result[0].height:
+                result = x
+    return result
+
+#Returns the vision object of the closest to center fruit
+def get_centered_fruit():
+    fruit = []
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__LIME), "lime")
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__LEMON), "lemon")
+    fruit = append_objects(fruit, Vision3.take_snapshot(Vision3__ORANGE), "orange")
+
+    result = None
+    if len(fruit) > 0:
+        result = fruit[0]
+        for x in fruit:
+            if abs(x[0].centerX - RESOLUTION_WIDTH/2) < abs(result[0].centerX - RESOLUTION_WIDTH/2):
+                result = x
+    return result
+
 
 # Scale a value from a min->max to 0->1
 def scale(val, min, max):
@@ -93,7 +109,7 @@ def find_fruit():
 
         if fruit_object:
             fruit = fruit_object[0]
-            x_error = -(fruit.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
+            x_error = (fruit.centerX - RESOLUTION_WIDTH/2)*GAIN_X #right is +
             # y_error = -(fruit.centerY - RESOLUTION_HEIGHT/2 - 10)*GAIN_Y #down is +
 
             left_motor.spin(REVERSE, 20 - x_error, PERCENT)
@@ -145,15 +161,17 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
     right_motor.stop()
 
 # Raise the arm to a tree height and start intaking
-ARM_LEVELS = { #TODO: Tune These
-  "travel": 20,
-  "tree_0": 15,
-  "tree_1": 25,
-  "tree_2": 40,
-  "tree_3": 45
+ARM_LEVELS = {
+  "travel": 0,
+  "tree_1": 13,
+  "tree_2": 28,
+  "tree_3": 41,
+  "box": 23
 }
 def set_arm(arm_level, intake_speed):
-    elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 100, RPM, True)
+    # elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 100, RPM, True)
+    elbow_motor.spin_to_position(15, DEGREES, 100, RPM, True)
+    print(elbow_motor.position)
     effector_motor.spin(FORWARD, intake_speed, PERCENT)
 
 # Drive forward a set distance based purely off drivetrain encoders
@@ -193,14 +211,18 @@ def calibrate_robot():
 
 # The routine to be executed when button is pressed --------------------------------
 def auton_routine():
-    calibrate_robot()
-    set_arm("travel", 0)
-    line_follow_dist_cm(27.5, 50)
-    gyro_turn(90, 50)
-    set_arm("TREE_2", 100)
-    drive_forward(10, 40)
-    set_arm("TREE_2", 0)
+    # calibrate_robot()
+    # set_arm("travel", 0)
+    # line_follow_dist_cm(27.5, 50)
+    # gyro_turn(90, 50)
+    # set_arm("TREE_2", 100)
+    # drive_forward(10, 40)
+    # set_arm("TREE_2", 0)
     # find_fruit()
+    elbow_motor.reset_position()
+    elbow_motor.set_stopping(BrakeType.HOLD)
+    print("TFYUGIYUUIYJU")
+    set_arm("tree_1", 0)
 
 controller.buttonB.pressed(auton_routine)
     
