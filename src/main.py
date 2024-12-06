@@ -211,18 +211,30 @@ def calibrate_robot():
 
 # The routine to be executed when button is pressed --------------------------------
 def auton_routine():
-    # calibrate_robot()
-    # set_arm("travel", 0)
-    # line_follow_dist_cm(27.5, 50)
-    # gyro_turn(90, 50)
-    # set_arm("TREE_2", 100)
-    # drive_forward(10, 40)
-    # set_arm("TREE_2", 0)
-    # find_fruit()
-    elbow_motor.reset_position()
-    elbow_motor.set_stopping(BrakeType.HOLD)
-    print("TFYUGIYUUIYJU")
-    set_arm("tree_1", 0)
+    calibrate_robot()
+    set_arm("travel", 0)
+    line_follow_dist_cm(27.5, 50)
+    gyro_turn(90, 50)
+    set_arm("TREE_2", 100)
+    drive_forward(10, 40)
+    set_arm("TREE_2", 0)
+    find_fruit()
+    # elbow_motor.reset_position()
+    # elbow_motor.set_stopping(BrakeType.HOLD)
+    # print("TFYUGIYUUIYJU")
+    # set_arm("tree_1", 0)
 
 controller.buttonB.pressed(auton_routine)
+
+# follow line a set distance using line sensors and IMU to stay steady
+
+# turn toward orange trees
+# set height to proper level
+# locate fruit (within center range, which one is closest)
+
+# move toward fruit using proportional control
+# until fruit harvested(torque reaches certain threshold)
+
+# retreat
+# 
     
