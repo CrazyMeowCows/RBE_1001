@@ -16,7 +16,8 @@ GAIN_Y = 1
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
 LINE_FOLLOWING_GAIN = 30
-GYRO_GAIN = 0.05
+# GYRO_GAIN = 0.05
+GYRO_GAIN = 1.5
 
 
 # Variable Setup ----------------------------------------------------
@@ -33,8 +34,8 @@ effector_motor = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 
 gyro = Inertial(Ports.PORT11)
 
-front_line = Line(brain.three_wire_port.e)
-back_line = Line(brain.three_wire_port.f)
+left_line = Line(brain.three_wire_port.e)
+right_line = Line(brain.three_wire_port.f)
 sonar = Sonar(brain.three_wire_port.c)
 
 Vision3__LEMON = Signature(3, 1335, 1737, 1536, -3855, -3589, -3722, 2.6, 0)
@@ -146,20 +147,18 @@ def gyro_turn(target_rot_deg, speed_percent):
 
 # Line follow at a given speed for a given distance based off drivetrain encoders
 def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
-    center_motor.reset_position()
-    center_motor.spin(FORWARD, speed_percent, PERCENT)
+    left_motor.reset_position()
+    right_motor.reset_position()
 
-    while (abs(2*center_motor.position(RotationUnits.REV)*math.pi*WHEEL_RAD_CM) < dist_to_travel_cm):
-        errorL = -scale(front_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        errorR = scale(back_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
-        angle_error = angle_error_deg(0, gyro.heading()) * GYRO_GAIN
-        line_error = (errorL + errorR) * LINE_FOLLOWING_GAIN
+    while (abs(2*center_motor.position(RotationUnits.REV)*math.pi*WHEEL_RAD_CM)/DRIVE_GEAR_RATIO < dist_to_travel_cm):
+        errorL = -scale(left_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
+        errorR = scale(right_line.value(), MIN_REFLECTIVITY, MAX_REFLECTIVITY)
+        line_error = (errorL + errorR) * LINE_FOLLOWING_GAIN * speed_percent
 
-        left_motor.spin(FORWARD, line_error - angle_error, PERCENT)
-        right_motor.spin(FORWARD, line_error + angle_error, PERCENT)
+        left_motor.spin(FORWARD, speed_percent + line_error, PERCENT)
+        right_motor.spin(FORWARD, speed_percent - line_error, PERCENT)
         sleep(20)
 
-    center_motor.stop()
     left_motor.stop()
     right_motor.stop()
 
@@ -214,7 +213,7 @@ def calibrate_robot():
 def auton_routine():
     calibrate_robot()
     # set_arm("travel", 0)
-    line_follow_dist_cm(50, 30)
+    line_follow_dist_cm(100, 60)
     # gyro_turn(90, 50)
     # set_arm("TREE_2", 100)
     # drive_forward(10, 40)
