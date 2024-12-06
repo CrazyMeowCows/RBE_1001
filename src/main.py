@@ -78,9 +78,9 @@ while True:
 
     left_motor.spin(FORWARD, forward + rotation, PERCENT)
     right_motor.spin(FORWARD, forward - rotation, PERCENT)
-    center_motor.spin(FORWARD, sideways * DRIVE_GEAR_RATIO, PERCENT)
+    center_motor.spin(FORWARD, sideways, PERCENT)
     elbow_motor.spin(FORWARD, rButton, RPM)
-    effector_motor.spin(FORWARD, lButton*0.4, PERCENT)
+    effector_motor.spin(FORWARD, lButton, PERCENT)
 
     # fruit = find_fruit()
     # if fruit:
