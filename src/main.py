@@ -41,7 +41,7 @@ effector_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 Vision3__LEMON = Signature(3, 1335, 1737, 1536, -3855, -3589, -3722, 2.6, 0)
 Vision3__LIME = Signature(2, -6813, -5985, -6400, -3439, -2829, -3134, 3.4, 0)
 Vision3__ORANGE = Signature(1, 5939, 6607, 6273, -2463, -2145, -2304, 1.7, 0)
-Vision3 = Vision(Ports.PORT3, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
+Vision3 = Vision(Ports.PORT20, 24, Vision3__LEMON, Vision3__LIME, Vision3__ORANGE)
 
 
 # Motor and Sensor Setup --------------------------------------------
@@ -80,7 +80,7 @@ while True:
     right_motor.spin(FORWARD, forward - rotation, PERCENT)
     center_motor.spin(FORWARD, sideways * DRIVE_GEAR_RATIO, PERCENT)
     elbow_motor.spin(FORWARD, rButton, RPM)
-    effector_motor.spin(FORWARD, lButton, PERCENT)
+    effector_motor.spin(FORWARD, lButton*0.4, PERCENT)
 
     # fruit = find_fruit()
     # if fruit:
