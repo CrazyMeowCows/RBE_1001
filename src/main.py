@@ -230,11 +230,11 @@ controller.buttonB.pressed(auton_routine)
 
 # turn toward orange trees
 # set height to proper level
-# locate fruit (within center range, which one is closest)
+    # locate fruit (within center range, which one is closest)
 
 # move toward fruit using proportional control
 # until fruit harvested(torque reaches certain threshold)
 
-# retreat
+# 
 # 
     
