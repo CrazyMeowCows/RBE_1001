@@ -170,7 +170,7 @@ ARM_LEVELS = {
   "travel": 0,
   "tree_1": 13,
   "tree_2": 26,
-  "tree_3": 41,
+  "tree_3": 43,
   "box": 23,
   "turn": 56
 }
@@ -255,70 +255,9 @@ def pickup_fruit(tree_distance, tree_height):
     reverse_to_wall(0, 10)
 
 def auton_routine():
-    calibrate_robot()
-    line_follow_dist_cm(80, 60)
-    set_arm("turn", 0)
-    gyro_turn(-90, 50)
-    reverse_to_wall(8, 20)
-    set_arm("tree_2", 100)
-    sleep(500)
-    find_fruit()
-    gyro_turn(-90, 50)
-    reverse_to_wall(10, 30)
-    set_arm("travel", 0)
-    gyro_turn(-180, 50)
-    line_follow_dist_cm(69, 60)
-    gyro_turn(-90, 50)
-    set_arm("travel", -30)
-    sleep(3000)
-    set_arm("travel", 0)
-    reverse_to_wall(10, 30)
-    gyro_turn(-2, 50)
-    reverse_to_wall(0, 10)
-
-    calibrate_robot()
-    line_follow_dist_cm(80+96, 60)
-    set_arm("turn", 0)
-    gyro_turn(-90, 50)
-    reverse_to_wall(8, 20)
-    set_arm("tree_3", 100)
-    sleep(500)
-    drive_forward(15, 25)
-    sleep(1000)
-    find_fruit()
-    gyro_turn(-90, 50)
-    reverse_to_wall(10, 30)
-    set_arm("travel", 0)
-    gyro_turn(-180, 50)
-    line_follow_dist_cm(69+96, 60)
-    gyro_turn(-90, 50)
-    set_arm("travel", -30)
-    sleep(3000)
-    set_arm("travel", 0)
-    reverse_to_wall(10, 30)
-    gyro_turn(-2, 50)
-    reverse_to_wall(0, 10)
-
-    calibrate_robot()
-    line_follow_dist_cm(80+96+87.5, 60)
-    set_arm("turn", 0)
-    gyro_turn(-90, 50)
-    reverse_to_wall(8, 20)
-    set_arm("tree_2", 100)
-    sleep(500)
-    find_fruit()
-    gyro_turn(-90, 50)
-    reverse_to_wall(10, 30)
-    set_arm("travel", 0)
-    gyro_turn(-180, 50)
-    line_follow_dist_cm(69+96+87.5, 60)
-    gyro_turn(-90, 50)
-    set_arm("travel", -30)
-    sleep(3000)
-    set_arm("travel", 0)
-    reverse_to_wall(10, 30)
-    gyro_turn(-2, 50)
-    reverse_to_wall(0, 10)
+    pickup_fruit(80, "tree_2")
+    pickup_fruit(176, "tree_3")
+    pickup_fruit(263.5, "tree_2")
 
 controller.buttonB.pressed(auton_routine)
 
