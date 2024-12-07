@@ -15,7 +15,7 @@ GAIN_X = 0.3
 GAIN_Y = 1
 MIN_REFLECTIVITY = 166
 MAX_REFLECTIVITY = 2645
-LINE_FOLLOWING_GAIN = 0.6
+LINE_FOLLOWING_GAIN = 0.3
 GYRO_GAIN = 0.05
 
 
@@ -37,10 +37,10 @@ left_line = Line(brain.three_wire_port.e)
 right_line = Line(brain.three_wire_port.f)
 sonar = Sonar(brain.three_wire_port.c)
 
-Vision5__ORANGE_FRUIT = Signature (1, 97, 2571, 1334, -3207, -2687, -2947, 2.6, 0)
+Vision5__ORANGE_FRUIT = Signature (1, 6719, 7239, 6978, -2555, -2215, -2384, 5.6, 0)
 Vision5__LIME_FRUIT = Signature (2, -6089, -4819, -5454, -4097, -3219, -3658, 5.4, 0)
-Vision5__LEMON_FRUIT = Signature (3, 515, 2521, 1518, -3985, -3557, -3771, 3.2, 0)
-Vision3 = Vision(Ports.PORT20, 24, Vision5__ORANGE_FRUIT, Vision5__LIME_FRUIT, Vision5__LEMON_FRUIT)
+Vision5__LEMON_FRUIT = Signature (3, 2041, 2499, 2270, -3789, -3459, -3624, 6, 0)
+Vision3 = Vision(Ports.PORT20, 38, Vision5__ORANGE_FRUIT, Vision5__LIME_FRUIT, Vision5__LEMON_FRUIT)
 
 
 # Motor and Sensor Setup --------------------------------------------
@@ -169,14 +169,15 @@ def line_follow_dist_cm(dist_to_travel_cm, speed_percent):
 ARM_LEVELS = {
   "travel": 0,
   "tree_1": 13,
-  "tree_2": 25,
+  "tree_2": 26,
   "tree_3": 41,
-  "box": 23
+  "box": 23,
+  "turn": 56
 }
 def set_arm(arm_level, intake_speed):
     elbow_motor.set_stopping(BrakeType.BRAKE)
     print("A")
-    elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 100, RPM, True)
+    elbow_motor.spin_to_position(ARM_LEVELS[arm_level]/ARM_GEAR_RATIO, DEGREES, 70, RPM, True)
     if(arm_level == "travel"):
         elbow_motor.stop()
         elbow_motor.set_stopping(BrakeType.COAST)
@@ -196,14 +197,29 @@ def drive_forward(dist_to_travel_cm, speed_percent):
     left_motor.stop()
     right_motor.stop()
 
+# Reverse until the sonar reaches a distance threshold
+def reverse_to_wall(dist_to_wall_cm, speed_percent):
+    left_motor.spin(REVERSE, speed_percent, PERCENT)
+    right_motor.spin(REVERSE, speed_percent, PERCENT)
+
+    if (dist_to_wall_cm > 0):
+        while (sonar.distance(DistanceUnits.CM) > dist_to_wall_cm):
+            sleep(20)
+    else:
+        while (sonar.distance(DistanceUnits.CM) > 5):
+            sleep(20)
+        sleep(2000)
+
+    left_motor.stop()
+    right_motor.stop()
+
 # Calibrate gyro and eliminate backlash
 def calibrate_robot():
     elbow_motor.set_stopping(BrakeType.COAST)
+    print("Elbow Motor Temp: " + str(elbow_motor.temperature()))
     gyro.calibrate()
     while (gyro.is_calibrating()):
         sleep(50)
-    # left_motor.spin(REVERSE, 20, PERCENT)
-    # right_motor.spin(REVERSE, 20, PERCENT)
 
     left_motor.reset_position()
     right_motor.reset_position()
@@ -211,30 +227,50 @@ def calibrate_robot():
     elbow_motor.reset_position()
     effector_motor.reset_position()
 
-    # left_motor.stop()
-    # right_motor.stop()
-    elbow_motor.set_stopping(BrakeType.HOLD)
-
 
 # The routine to be executed when button is pressed --------------------------------
 def auton_routine():
-    print(str(elbow_motor.temperature()))
     calibrate_robot()
-    set_arm("travel", 0)
-    line_follow_dist_cm(82, 60)
+    line_follow_dist_cm(80, 60)
+    set_arm("turn", 0)
     gyro_turn(-90, 50)
-    drive_forward(5, -10)
-    sleep(500)
+    reverse_to_wall(8, 20)
     set_arm("tree_2", 100)
+    sleep(500)
     find_fruit()
-    drive_forward(16, -20)
+    gyro_turn(-90, 50)
+    reverse_to_wall(10, 30)
     set_arm("travel", 0)
     gyro_turn(-180, 50)
-    line_follow_dist_cm(70, 60)
+    line_follow_dist_cm(69, 60)
     gyro_turn(-90, 50)
     set_arm("travel", -30)
     sleep(1000)
-    gyro_turn(0, 50)
+    set_arm("travel", 0)
+    reverse_to_wall(10, 30)
+    gyro_turn(-2, 50)
+    reverse_to_wall(0, 10)
+
+    calibrate_robot()
+    line_follow_dist_cm(80+96, 60)
+    set_arm("turn", 0)
+    gyro_turn(-90, 50)
+    reverse_to_wall(8, 20)
+    set_arm("tree_2", 100)
+    sleep(500)
+    find_fruit()
+    gyro_turn(-90, 50)
+    reverse_to_wall(10, 30)
+    set_arm("travel", 0)
+    gyro_turn(-180, 50)
+    line_follow_dist_cm(69+96, 60)
+    gyro_turn(-90, 50)
+    set_arm("travel", -30)
+    sleep(1000)
+    set_arm("travel", 0)
+    reverse_to_wall(10, 30)
+    gyro_turn(-2, 50)
+    reverse_to_wall(0, 10)
 
 controller.buttonB.pressed(auton_routine)
 
